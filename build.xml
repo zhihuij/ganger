@@ -1,0 +1,166 @@
+<?xml version="1.0" ?>
+<project name="Automate" default="release" basedir=".">
+	<property name="src.dir" value="${basedir}/src" />
+	<property name="java.lib.dir" value="D:/Program Files/Java/jdk1.6.0_19/lib" />
+	<property name="build.dir" value="${basedir}/build" />
+	<property name="classes.dir" value="${basedir}/target/classes" />
+	<property name="dist.dir" value="${basedir}/target/dist" />
+	<property name="lib.dir" value="${basedir}/lib" />
+	<property name="jar-master.file" value="auto-master.jar" />
+	<property name="jar-slave.file" value="auto-slave.jar" />
+
+	<property name="main.dir" value="${src.dir}/main" />
+	<property name="target.dir" value="${basedir}/target" />
+	<property name="dependency.dir" value="${target.dir}/dependency" />
+
+	<property name="release.out.dir" value="${target.dir}/release" />
+	<property name="release.name" value="automate-1.0.0" />
+	<property name="release.master.name" value="auto-master-1.0.0" />
+	<property name="release.slave.name" value="auto-slave-1.0.0" />
+
+	<path id="compile.classpath">
+		<fileset dir="${java.lib.dir}">
+			<include name="tools.jar" />
+		</fileset>
+	</path>
+
+	<patternset id="no.java">
+		<exclude name="**/*.java" />
+	</patternset>
+
+	<patternset id="has.java">
+		<include name="**/*.java" />
+	</patternset>
+
+	<target name="init">
+		<mkdir dir="${classes.dir}" />
+		<mkdir dir="${dist.dir}" />
+		<copy todir="${classes.dir}">
+			<fileset dir="${src.dir}">
+				<patternset refid="has.java" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="clean">
+		<delete dir="${build.dir}" />
+		<delete dir="${dist.dir}" />
+		<echo level="info">clean successfully~</echo>
+	</target>
+
+	<target name="compile" depends="init">
+		<javac srcdir="${src.dir}" destdir="${classes.dir}" debug="true" verbose="${verbose}" includeAntRuntime="no">
+			<classpath refid="compile.classpath" />
+		</javac>
+	</target>
+
+	<target name="auto-master">
+		<jar jarfile="${dist.dir}/${jar-master.file}">
+			<fileset dir="${classes.dir}">
+				<exclude name="**/slave/" />
+			</fileset>
+			<manifest>
+				<attribute name="Main-Class" value="com.netease.automate.master.AutoMaster" />
+				<attribute name="Built-By" value="Netease" />
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="auto-slave">
+		<jar jarfile="${dist.dir}/${jar-slave.file}">
+			<fileset dir="${classes.dir}">
+				<exclude name="**/master/" />
+				<exclude name="**/task/" />
+			</fileset>
+			<manifest>
+				<attribute name="Main-Class" value="com.netease.automate.master.AutoSlave" />
+				<attribute name="Built-By" value="Netease" />
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="release">
+		<delete file="${release.out.dir}/${release.master.name}.tar.gz" />
+		<delete file="${release.out.dir}/${release.slave.name}.tar.gz" />
+
+		<property name="release.master.dir" value="${release.out.dir}/${release.master.name}" />
+		<property name="release.slave.dir" value="${release.out.dir}/${release.slave.name}" />
+		<delete dir="${release.master.dir}" />
+		<mkdir dir="${release.master.dir}" />
+		<delete dir="${release.slave.dir}" />
+		<mkdir dir="${release.slave.dir}" />
+
+		<!-- Make & copy bin and resources. -->
+		<copy todir="${release.master.dir}">
+			<fileset dir="${main.dir}">
+				<exclude name="**/java/" />
+				<exclude name="**/*slave.sh" />
+				<exclude name="**/*launch.sh" />
+			</fileset>
+		</copy>
+		<copy todir="${release.slave.dir}">
+			<fileset dir="${main.dir}">
+				<exclude name="**/java/" />
+				<exclude name="**/*master.sh" />
+				<exclude name="**/ganger.sh" />
+			</fileset>
+		</copy>
+
+		<delete dir="${dist.dir}" />
+		<mkdir dir="${dist.dir}" />
+		
+		<jar jarfile="${dist.dir}/${jar-master.file}">
+			<fileset dir="${classes.dir}">
+				<exclude name="**/slave/" />
+				<exclude name="**/*.sh" />
+			</fileset>
+			<manifest>
+				<attribute name="Main-Class" value="com.netease.automate.master.AutoMaster" />
+				<attribute name="Built-By" value="Netease" />
+			</manifest>
+		</jar>
+
+		<jar jarfile="${dist.dir}/${jar-slave.file}">
+			<fileset dir="${classes.dir}">
+				<exclude name="**/master/" />
+				<exclude name="**/task/" />
+				<exclude name="**/*.sh" />
+			</fileset>
+			<manifest>
+				<attribute name="Main-Class" value="com.netease.automate.master.AutoSlave" />
+				<attribute name="Built-By" value="Netease" />
+			</manifest>
+		</jar>
+
+		<mkdir dir="${release.master.dir}/lib" />
+		<copy todir="${release.master.dir}/lib">
+			<fileset dir="${dependency.dir}" />
+			<fileset dir="${dist.dir}">
+				<exclude name="**/*slave.jar" />
+			</fileset>
+			<fileset dir="${lib.dir}" />
+		</copy>
+
+		<mkdir dir="${release.master.dir}/sample" />
+		<copy todir="${release.master.dir}/sample">
+			<fileset dir="${basedir}/sample" />
+		</copy>
+
+		<mkdir dir="${release.slave.dir}/lib" />
+		<copy todir="${release.slave.dir}/lib">
+			<fileset dir="${dependency.dir}" />
+			<fileset dir="${dist.dir}">
+				<exclude name="**/*master.jar" />
+			</fileset>
+			<fileset dir="${lib.dir}">
+				<exclude name="**/event*" />
+				<exclude name="**/jline*" />
+			</fileset>
+		</copy>
+
+		<tar tarfile="${release.out.dir}/${release.master.name}.tar.gz" basedir="${release.out.dir}/" includes="*master*/**/*" compression="gzip" longfile="gnu" />
+
+		<tar tarfile="${release.out.dir}/${release.slave.name}.tar.gz" basedir="${release.out.dir}/" includes="*slave*/**/*" compression="gzip" longfile="gnu" />
+	</target>
+
+</project>

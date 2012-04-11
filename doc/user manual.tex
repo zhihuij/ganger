@@ -1,0 +1,208 @@
+\documentclass[]{article}
+\usepackage{listings}
+\usepackage{url}
+\usepackage{color}
+\usepackage{fancyvrb}
+\usepackage[colorlinks,linkcolor=black,anchorcolor=black,citecolor=black]{hyperref}
+\fvset{fontsize=\scriptsize,numbers=left,frame=single}
+
+\newcommand{\file}{\begingroup \urlstyle{tt}\Url}
+\newcommand{\computeroutput}[1]{\textsf{#1}}
+\newcommand{\userinput}[1]{\textsf{#1}}
+\newcommand{\program}[1]{\textsf{#1}}
+\newcommand{\command}[1]{\texttt{#1}}
+
+\newcommand{\softname}{Ganger }
+\newcommand{\mastername}{ganger}
+\newcommand{\docversion}[1]{\textbf{Version: #1}}
+
+%opening
+\title{User Manual of \softname}
+\author{Zhihui Jiao}
+
+\begin{document}
+
+\maketitle
+\begin{center}
+\docversion{1.0.0}
+\end{center}
+\newpage
+\tableofcontents
+\newpage
+
+\section{Introduction}
+\subsection{What is \softname}
+
+\softname is a simple automate tool. It can automate deploy packages, launch target processes, update packages deployment(kill the old process and launch the new one), restart target processes and monitor the status of target process.
+
+It saves your time for development, and make it easier to deploy your systems on many target machines simultaneously.
+
+\subsection{Terminology}
+
+There are some terms you should know when using \program{\mastername}:
+
+\begin{itemize}
+\item \textbf{project}: project defined as a configuration file which describes the packages belong to it, the target machines these packages should deploy to, the startup command used to launch target process etc.
+\item \textbf{package}: compressed binary executables which contains the target program.
+\item \textbf{process}: process runs on the target machine, each process will belongs to a package.
+\end{itemize}
+
+\subsection{Features}
+
+\begin{itemize}
+\item \textbf{\emph{automatation}}: help you do some automate tasks, for example: deploy packages, start processes, stop processes and update deployments etc.
+
+\textbf{Note: } deploy action \textbf{ONLY} support compressed binary executables(.tar.gz) currently.
+\item \textbf{\emph{lifecycle management}}: you can start, stop, restart or update the target process.
+
+\item \textbf{\emph{dependence management}}: we organize the package as a directed graph with no cycles, when a process of a package crashed or started, the processes of the package which depend on it will be notified.
+
+Automate action will operate on packages as the topological order of the dependence graph(or reverse order for actions similar to \command{stop}).
+
+\item \textbf{\emph{status monitor}}: monitor the target process's status.
+\end{itemize}
+
+\section{Key Components}
+
+\subsection{Master}
+
+The master manage the whole system, accept the configurations of user, and do the work based on the configuration: deploy packages, launch process etc. And there is a simple console for user.
+
+\subsection{Slave}
+
+The slave accept the command send from master, and execute the command.
+
+\subsection{ZooKeeper}
+
+\program{ZooKeeper}(\url{http://http://zookeeper.apache.org/}) is used to maintain the state in a central location and is used for its powerful notification capabilities (ephemeral nodes and watchers).
+
+\section{Dependences}
+
+\subsection{SSH}
+
+When deploying packages, slaves need an ssh access to the remote master node without password. Slaves will pull(\program{rsync}) packages from the package root in master node to a default local path, and extract them. 
+
+\subsection{ZooKeeper}
+You need set up a \program{ZooKeeper} instance, and start \program{\mastername} with the \program{ZooKeeper} address.
+
+\section{Compile From Source}
+
+You can get compressed binary executables by running the \command{release} target of ant. It will
+produces two compressed files: one for master and the other for slave. These two files resident in \file{target\release} after you run the \command{release} command.
+
+\section{How Does It Work}
+
+\begin{enumerate}
+\item You define a project configuration file and load it through command of master(see Example \ref{sec:example})).
+\item You tell \program{\mastername} to execute the deploy task(or start, stop etc.).
+\item Master read the configuration info from project configuration, send the task command and package info to the slave.
+\item Slave execute the command with the command info and give a feedback to master.
+\item Master receive the feedback and consider the task has done.
+\end{enumerate}
+
+\section{Command List}
+
+You can get a full list from the master console by typing \program{help}.
+
+\begin{Verbatim}
+    >./ganger zkAddress
+                zkAddress is the ZooKeeper address
+    ganger > load project
+                load project from configuration file
+    ganger > deploy project [packages...]
+                deploy packages defined in the project
+    ganger > launch project [packages...]
+                launch process defined in the project
+    ganger > update project [packages...]
+                update deployed packages and restart the process
+    ganger > stop project [packages...]
+                stop target process
+    ganger > restart project [packages...]
+                restart target process
+\end{Verbatim}
+
+\section{Example}
+\label{sec:example}
+
+\paragraph{Configuration file}
+
+A sample configuration(as a \program{Java} property file, locate in \file{sample/xmpp.properties}): 
+
+\begin{Verbatim}
+project.name=xmpp
+project.packages=master,openfire,proxy,robot
+project.packageRoot=/home/space/automate/xmpp
+
+# master
+package.master.version=1.0.0
+package.master.fileName=master-1.0.0.tar.gz
+package.master.deployPath=/home/space/automate/deploy
+package.master.launchCmd=bin/mxmaster.sh
+package.master.targets=10.100.82.217
+
+# openfire
+package.openfire.version=3.7.2
+package.openfire.fileName=openfire-3.7.2.tar.gz
+package.openfire.deployPath=/home/space/automate/deploy
+package.openfire.launchCmd=bin/openfire.sh
+package.openfire.targets=10.100.82.216,10.100.82.215
+package.openfire.deps=master
+
+# proxy
+package.proxy.version=1.0.0
+package.proxy.fileName=proxy-1.0.0.tar.gz
+package.proxy.deployPath=/home/space/automate/deploy
+package.proxy.launchCmd=bin/wxproxy.sh
+package.proxy.targets=10.100.82.215
+package.proxy.deps=openfire
+
+# robot
+package.robot.version=1.0.0
+package.robot.fileName=robot-1.0.0.tar.gz
+package.robot.deployPath=/home/space/automate/deploy
+package.robot.launchCmd=bin/mxrobot.sh
+package.robot.targets=10.100.82.214
+package.robot.deps=openfire
+\end{Verbatim}
+
+\paragraph{Config Fields}
+
+\begin{Verbatim}
+    project.name
+    	# project name
+    project.packages
+    	# packages belong to this project
+    project.packageRoot
+    	# package root of this project(contains the initial packages)
+    
+    package.PKG.version
+    	# package version
+    package.PKG.fileName
+    	# full package name
+    package.PKG.deployPath
+    	# deploy path on target machine
+    package.PKG.launchCmd
+    	# command for launching target process
+    package.PKG.targets
+    	# the address(ip) of target machine
+    package.PKG.deps
+    	# package that this package dependent on
+\end{Verbatim}
+
+\paragraph{Usage}
+
+You can use following commands to load a project configuration, deploy the packages and launch the processes on the target machines:
+\begin{Verbatim}
+    >./ganger 10.100.82.218
+    ganger > load xmpp.properties
+    ganger > deploy xmpp
+    ganger > launch xmpp
+\end{Verbatim}
+and then, you can use \program{status} to check system status: 
+
+\begin{Verbatim}
+    ganger > status xmpp
+\end{Verbatim}
+this command will show the slave status and process status.
+
+\end{document}
