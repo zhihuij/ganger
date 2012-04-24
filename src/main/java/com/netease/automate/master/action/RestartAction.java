@@ -58,5 +58,6 @@ public class RestartAction extends AbstractAction {
     protected void afterActionDone(AbstractProcess process, String pkgTargetPath) throws KeeperException,
             InterruptedException {
         process.setStatus(ProcessStatus.RESTARTED);
+        zk.getData(pkgTargetPath, true, null);
     }
 }

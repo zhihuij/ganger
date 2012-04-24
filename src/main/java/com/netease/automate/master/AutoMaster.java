@@ -107,13 +107,14 @@ public class AutoMaster {
                 List<String> slaves = zk.getChildren(slavesPath, slaveStatusWatcher);
                 for (String addr : slaves) {
                     SlaveTarget slaveTarget = slaveTargetMap.get(addr);
-                    if (slaveTarget == null) {
+                    String slaveStatusPath = Utils.getSlaveStatusPath(addr);
+                    if (slaveTarget == null && Utils.checkNode(zk, slaveStatusPath)) {
                         slaveTarget = new SlaveTarget(addr);
                         slaveTarget.setStatus(SlaveStatus.ONLINE);
 
                         slaveTargetMap.put(addr, slaveTarget);
 
-                        zk.getData(Utils.getSlaveStatusPath(addr), slaveStatusWatcher, null);
+                        zk.getData(slaveStatusPath, slaveStatusWatcher, null);
 
                         LogUtils.logInfoLine(Utils.constructString("slave -> ", addr, " online"));
                     }

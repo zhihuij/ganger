@@ -121,8 +121,9 @@ public class MasterConsole {
                 String trimLine = line.trim();
                 if (trimLine.length() != 0) {
                     try {
-                        if (!commandMap.containsKey(trimLine) || trimLine.equals(Global.CMD_HELP)
-                                || !commandOptions.parseCommand(trimLine)) {
+                        if (!commandOptions.parseCommand(trimLine)
+                                || !commandMap.containsKey(commandOptions.getAction())
+                                || commandOptions.getAction().equals(Global.CMD_HELP)) {
                             usage();
                             continue;
                         }

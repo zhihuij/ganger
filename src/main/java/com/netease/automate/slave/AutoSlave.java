@@ -199,8 +199,8 @@ public class AutoSlave {
     }
 
     public void processMasterCmd(String action, String projectName, byte[] data) {
-        logger.info("recv master cmd: " + projectName + " -> " + action + "@" + data);
         PackageMeta pkgMeta = JsonUtils.getObject(data, PackageMeta.class);
+        logger.info("recv master cmd: " + projectName + " -> " + action + "@" + pkgMeta.getPkgName());
 
         try {
             if (Global.CMD_DEPLOY.equals(action)) {
