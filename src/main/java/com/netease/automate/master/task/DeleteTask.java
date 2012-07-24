@@ -5,6 +5,11 @@ import org.apache.zookeeper.ZooKeeper;
 import com.netease.automate.meta.PackageMeta;
 import com.netease.automate.utils.Utils;
 
+/**
+ * Task which will delete a node after task done.
+ * 
+ * @author jiaozhihui@corp.netease.com
+ */
 public class DeleteTask extends CommonPackageTask {
     private ZooKeeper zk;
     private String pkgTargetPath;

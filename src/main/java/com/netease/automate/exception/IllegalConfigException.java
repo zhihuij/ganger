@@ -1,5 +1,10 @@
 package com.netease.automate.exception;
 
+/**
+ * Illegal config exception.
+ * 
+ * @author jiaozhihui@corp.netease.com
+ */
 public class IllegalConfigException extends AutomateException {
     private static final long serialVersionUID = -5860124235994022878L;
 

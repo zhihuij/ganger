@@ -101,19 +101,75 @@ public abstract class AbstractAction implements Action {
         }
     }
 
+    /**
+     * Check the target package path.
+     * 
+     * @param pkgPath
+     *            package path
+     * @throws KeeperException
+     *             throws when write project meta to zookeeper
+     * @throws InterruptedException
+     *             if the zookeeper server transaction is interrupted
+     */
     protected abstract void checkNode(String pkgPath) throws KeeperException, InterruptedException;
 
+    /**
+     * Check target slave status.
+     * 
+     * @param targetPath
+     *            target path
+     * @throws ProcessLaunchedException
+     *             if the target process has been launched
+     * @throws ProcessNotLaunchedException
+     *             if the target process has not been launched
+     */
     protected abstract void checkTarget(String targetPath) throws ProcessLaunchedException, ProcessNotLaunchedException;
 
+    /**
+     * Get the action name.
+     * 
+     * @return the action name
+     */
     protected abstract String getAction();
 
+    /**
+     * Get the root path of action
+     * 
+     * @param projectName
+     *            the project name
+     * @return the root path
+     */
     protected abstract String getActionRootPath(String projectName);
 
+    /**
+     * Before action behavior.
+     * 
+     * @param process
+     *            the target process
+     * @param pkgTargetPath
+     *            package target path
+     * @throws KeeperException
+     *             throws when write project meta to zookeeper
+     * @throws InterruptedException
+     *             if the zookeeper server transaction is interrupted
+     */
     protected void beforeDoAction(AbstractProcess process, String pkgTargetPath) throws KeeperException,
             InterruptedException {
         // do nothing
     }
 
+    /**
+     * After action behavior.
+     * 
+     * @param process
+     *            the target process
+     * @param pkgTargetPath
+     *            package target path
+     * @throws KeeperException
+     *             throws when write project meta to zookeeper
+     * @throws InterruptedException
+     *             if the zookeeper server transaction is interrupted
+     */
     protected void afterActionDone(AbstractProcess process, String pkgTargetPath) throws KeeperException,
             InterruptedException {
         // do nothing

@@ -46,7 +46,7 @@ public class PackageSupervisor extends AbstractProcess {
         List<String> targetList = packageMeta.getTargetList();
         for (String target : targetList) {
             RuntimeProcess subProcess = new RuntimeProcess(projectMeta, packageMeta, target);
-            subProcess.init(rootProcess, this); // runtime process should use paramter parent as its
+            subProcess.init(rootProcess, this); // runtime process should use parameter parent as its
             // parent
         }
     }

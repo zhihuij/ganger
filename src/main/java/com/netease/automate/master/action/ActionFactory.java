@@ -36,6 +36,15 @@ public class ActionFactory {
         this.zk = zk;
     }
 
+    /**
+     * Create the action object according the action name.
+     * 
+     * @param action
+     *            action name
+     * @param projectMeta
+     *            the project meta this action binded to
+     * @return the action object
+     */
     public Action createAction(String action, ProjectMeta projectMeta) {
         if (Global.CMD_DEPLOY.equals(action)) {
             return new DeployAction(zk);

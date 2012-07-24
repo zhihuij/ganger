@@ -45,23 +45,56 @@ import com.netease.event.ReactorStrategy;
 public class AutoMaster {
     private static Logger logger = Logger.getLogger(AutoMaster.class);
 
+    /**
+     * Zookeeper instance.
+     */
     private ZooKeeper zk = null;
+    /**
+     * Address of the zookeeper.
+     */
     private String zkAddress;
+    /**
+     * Address of current master node.
+     */
     private String localAddr;
 
+    /**
+     * Reactor for the event.
+     */
     private Reactor reactor = null;
+    /**
+     * Event watcher for target process event.
+     */
     private EventWatcher eventWatcher = null;
+    /**
+     * Handler of process event.
+     */
     private ProcessEventHandler eventHandler = null;
 
     private ActionFactory actionFactory;
 
+    /**
+     * All known project metas.
+     */
     private Map<String, ProjectMeta> projectMetaMap = new HashMap<String, ProjectMeta>();
+    /**
+     * Root process map for all the project, project name as the key.
+     */
     private Map<String, RootProcess> rootProcessMap = new HashMap<String, RootProcess>();
 
+    /**
+     * Stop process the event while project is in pause state.
+     */
     private Set<String> eventPauseSet = Collections.synchronizedSet(new HashSet<String>());
 
+    /**
+     * User console.
+     */
     private MasterConsole console = null;
 
+    /**
+     * Status watcher for the slave.
+     */
     private SlaveStatusWatcher slaveStatusWatcher = null;
     private Map<String, SlaveTarget> slaveTargetMap = new ConcurrentHashMap<String, SlaveTarget>();
 
@@ -104,6 +137,7 @@ public class AutoMaster {
         try {
             String slavesPath = Utils.constructString(Global.ARC_ROOT, Global.ARC_SLAVE);
             if (Utils.checkNode(zk, slavesPath)) {
+                // load slave status from zookeeper
                 List<String> slaves = zk.getChildren(slavesPath, slaveStatusWatcher);
                 for (String addr : slaves) {
                     SlaveTarget slaveTarget = slaveTargetMap.get(addr);
@@ -126,12 +160,23 @@ public class AutoMaster {
             throw new ZooKeeperException(e);
         }
 
+        // start user console
         console = new MasterConsole(this);
         if (consoleFlag) {
             console.start();
         }
     }
 
+    /**
+     * Do the specific action for target project.
+     * 
+     * @param actionName
+     *            name of the action
+     * @param projectName
+     *            name of the project
+     * @param packages
+     *            list of package names which the action will be processed
+     */
     public void doAction(String actionName, String projectName, List<String> packages) {
         if (actionName.equals(Global.CMD_LOAD)) {
             load(projectName, packages);
@@ -141,6 +186,7 @@ public class AutoMaster {
 
             if (projectMeta == null || rootProcess == null) {
                 try {
+                    // construct project meta from zookeeper meta.
                     projectMeta = constrcutProjectMeta(projectName);
 
                     rootProcess = initProject(projectMeta);
@@ -172,6 +218,15 @@ public class AutoMaster {
         }
     }
 
+    /**
+     * Interface for test.
+     * 
+     * @param projectName
+     *            name of the project
+     * @param action
+     *            action object, which can be construct to complete some test work
+     * @return the meta info of the target project
+     */
     public ProjectMeta test(String projectName, Action action) {
         RootProcess rootProcess = rootProcessMap.get(projectName);
         ProjectMeta projectMeta = projectMetaMap.get(projectName);
@@ -195,6 +250,14 @@ public class AutoMaster {
         return rootProcess;
     }
 
+    /**
+     * Load and construct project meta from project config file.
+     * 
+     * @param projectConfigFile
+     *            file name of the proejct config
+     * @param packages
+     *            can't contain anything
+     */
     public void load(String projectConfigFile, List<String> packages) {
         if (packages.size() != 0) {
             throw new IllegalArgumentException("illegal argument");
@@ -233,17 +296,50 @@ public class AutoMaster {
         }
     }
 
+    /**
+     * Do a single specific action.
+     * 
+     * @param actionName
+     *            name of the action
+     * @param projectMeta
+     *            project meta
+     * @param rootProcess
+     *            root process of the project
+     * @param packages
+     *            target packages
+     */
     public void doSingleAction(String actionName, ProjectMeta projectMeta, RootProcess rootProcess,
             List<String> packages) {
+        // construct action from factory
         Action actionObj = actionFactory.createAction(actionName, projectMeta);
 
         rootProcess.doSupervisedAction(actionObj, packages);
     }
 
+    /**
+     * Deploy packages of the project.
+     * 
+     * @param projectMeta
+     *            project meta
+     * @param rootProcess
+     *            root process of the project
+     * @param packages
+     *            target package names
+     */
     public void deploy(ProjectMeta projectMeta, RootProcess rootProcess, List<String> packages) {
         doSingleAction(Global.CMD_DEPLOY, projectMeta, rootProcess, packages);
     }
 
+    /**
+     * Launch target project or target processes.
+     * 
+     * @param projectMeta
+     *            project meta
+     * @param rootProcess
+     *            root process of the project
+     * @param packages
+     *            target package names
+     */
     public void launch(ProjectMeta projectMeta, RootProcess rootProcess, List<String> packages) {
         eventPauseSet.add(projectMeta.getProjectName());
 
@@ -252,6 +348,17 @@ public class AutoMaster {
         eventPauseSet.remove(projectMeta.getProjectName());
     }
 
+    /**
+     * Update packages: stop current running processes of the packages, deploy the new packages, and
+     * launch the processes of the packages.
+     * 
+     * @param projectMeta
+     *            project meta
+     * @param rootProcess
+     *            root process of the project
+     * @param packages
+     *            target package names
+     */
     public void update(ProjectMeta projectMeta, RootProcess rootProcess, List<String> packages) {
         eventPauseSet.add(projectMeta.getProjectName());
 
@@ -262,6 +369,16 @@ public class AutoMaster {
         eventPauseSet.remove(projectMeta.getProjectName());
     }
 
+    /**
+     * Restart the target processes of the packages.
+     * 
+     * @param projectMeta
+     *            project meta
+     * @param rootProcess
+     *            root process of the project
+     * @param packages
+     *            target package names
+     */
     public void restart(ProjectMeta projectMeta, RootProcess rootProcess, List<String> packages) {
         eventPauseSet.add(projectMeta.getProjectName());
 
@@ -270,6 +387,16 @@ public class AutoMaster {
         eventPauseSet.remove(projectMeta.getProjectName());
     }
 
+    /**
+     * Stop the target processes of the packages.
+     * 
+     * @param projectMeta
+     *            project meta
+     * @param rootProcess
+     *            root process of the project
+     * @param packages
+     *            target package names
+     */
     public void stop(ProjectMeta projectMeta, RootProcess rootProcess, List<String> packages) {
         eventPauseSet.add(projectMeta.getProjectName());
 
@@ -278,6 +405,16 @@ public class AutoMaster {
         eventPauseSet.remove(projectMeta.getProjectName());
     }
 
+    /**
+     * Get the status of the project.
+     * 
+     * @param projectMeta
+     *            project meta
+     * @param rootProcess
+     *            root process of the project
+     * @param packages
+     *            target package names
+     */
     public void status(ProjectMeta projectMeta, RootProcess rootProcess, List<String> packages) {
         // slave status
         LogUtils.logInfoLine(Utils.constructString("slave status of ", projectMeta.getProjectName(), ": "));
@@ -293,9 +430,23 @@ public class AutoMaster {
 
         LogUtils.logInfoLine("");
         LogUtils.logInfoLine(Utils.constructString("process status of ", projectMeta.getProjectName(), ": "));
+        // packages status
         doSingleAction(Global.CMD_STATUS, projectMeta, rootProcess, packages);
     }
 
+    /**
+     * Parse project config from config file
+     * 
+     * @param configFile
+     *            filen name of the config file
+     * @param localAddr
+     *            address of the current master node
+     * @return the project meta
+     * @throws KeeperException
+     *             throws when write project meta to zookeeper
+     * @throws InterruptedException
+     *             if the zookeeper server transaction is interrupted
+     */
     private ProjectMeta parseProjectConfig(String configFile, String localAddr) throws KeeperException,
             InterruptedException {
         ProjectMeta projectMeta = new ProjectMeta(configFile, localAddr);
@@ -311,6 +462,16 @@ public class AutoMaster {
         return projectMeta;
     }
 
+    /**
+     * Write packages info of project to zookeeper
+     * 
+     * @param projectMeta
+     *            project meta
+     * @throws KeeperException
+     *             throws when write project meta to zookeeper
+     * @throws InterruptedException
+     *             if the zookeeper server transaction is interrupted
+     */
     private void writePackageInfo(ProjectMeta projectMeta) throws KeeperException, InterruptedException {
         String projectMetaPath = Utils.getProjectMetaRootPath(projectMeta.getProjectName());
 
@@ -321,6 +482,7 @@ public class AutoMaster {
 
             String packagePath = Utils.constructString(projectMetaPath, Global.PATH_SEPARATOR, pkgName);
             byte[] packageInfo = JsonUtils.getObjectData(packageMeta);
+            // write package info
             if (!Utils.checkNode(zk, packagePath)) {
                 zk.create(packagePath, packageInfo, Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
             } else {
@@ -329,6 +491,17 @@ public class AutoMaster {
         }
     }
 
+    /**
+     * Read project meta from zookeeper
+     * 
+     * @param projectName
+     *            name of the project
+     * @return project meta
+     * @throws KeeperException
+     *             throws when write project meta to zookeeper
+     * @throws InterruptedException
+     *             if the zookeeper server transaction is interrupted
+     */
     private ProjectMeta constrcutProjectMeta(String projectName) throws KeeperException, InterruptedException {
         ProjectMeta projectMeta = null;
 
@@ -338,6 +511,7 @@ public class AutoMaster {
         String projectPath = Utils.getProjectRootPath(projectName);
         byte[] b = zk.getData(projectPath, false, null);
 
+        // read the master meta
         MasterMeta maserMeta = JsonUtils.getObject(b, MasterMeta.class);
 
         packageRoot = maserMeta.getPackageRoot();
@@ -347,18 +521,33 @@ public class AutoMaster {
 
         List<String> packageNameList = zk.getChildren(projectMetaPath, false);
 
+        // read package list
         projectMeta = new ProjectMeta(projectName, masterAddr, packageRoot, readPackageInfo(projectMetaPath,
                 packageNameList));
 
         return projectMeta;
     }
 
+    /**
+     * Read package info from zookeeper.
+     * 
+     * @param packageRootPath
+     *            the root path of the packages
+     * @param packageNameList
+     *            the list of package names
+     * @return the list of package metas
+     * @throws KeeperException
+     *             throws when write project meta to zookeeper
+     * @throws InterruptedException
+     *             if the zookeeper server transaction is interrupted
+     */
     private List<PackageMeta> readPackageInfo(String packageRootPath, List<String> packageNameList)
             throws KeeperException, InterruptedException {
         List<PackageMeta> packageMetaList = new ArrayList<PackageMeta>();
 
         for (String pkgName : packageNameList) {
             String packagePath = Utils.constructString(packageRootPath, Global.PATH_SEPARATOR, pkgName);
+            // read package data and construct the meta object
             byte[] data = zk.getData(packagePath, false, null);
             PackageMeta packageMeta = JsonUtils.getObject(data, PackageMeta.class);
 
@@ -368,6 +557,16 @@ public class AutoMaster {
         return packageMetaList;
     }
 
+    /**
+     * The the basic data path of the project in zookeeper.
+     * 
+     * @param projectMeta
+     *            project meta
+     * @throws KeeperException
+     *             throws when write project meta to zookeeper
+     * @throws InterruptedException
+     *             if the zookeeper server transaction is interrupted
+     */
     private void checkBasicNode(ProjectMeta projectMeta) throws KeeperException, InterruptedException {
         // check arc node
         Utils.checkAndCreateNode(zk, Global.ARC_ROOT);

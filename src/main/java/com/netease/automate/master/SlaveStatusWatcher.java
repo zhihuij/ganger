@@ -18,7 +18,15 @@ import com.netease.automate.meta.SlaveTarget;
 import com.netease.automate.utils.LogUtils;
 import com.netease.automate.utils.Utils;
 
+/**
+ * Watcher for slave status.
+ * 
+ * @author jiaozhihui@corp.netease.com
+ */
 public class SlaveStatusWatcher implements Watcher {
+    /**
+     * Path pattern for slave status.
+     */
     private static final String SLAVE_ADDR_MATCHER = "/arc/slave/(.+)/status";
 
     private Map<String, SlaveTarget> slaveTargetMap = null;

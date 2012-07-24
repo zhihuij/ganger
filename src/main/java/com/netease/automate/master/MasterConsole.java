@@ -18,13 +18,28 @@ import jline.FileNameCompletor;
 import jline.MultiCompletor;
 import jline.SimpleCompletor;
 
+/**
+ * User console for master node.
+ * 
+ * @author jiaozhihui@corp.netease.com
+ */
 public class MasterConsole {
+    /**
+     * Console prompter.
+     */
     private static final String CONSOLE_PROMPT = "ganger > ";
 
+    /**
+     * Command list.
+     */
     private static final List<String> commandList = new ArrayList<String>();
+    /**
+     * Command map, command name as the key, description as the value.
+     */
     private static final Map<String, String> commandMap = new HashMap<String, String>();
 
     static {
+        // init command list
         commandList.add(Global.CMD_LOAD);
         commandList.add(Global.CMD_DEPLOY);
         commandList.add(Global.CMD_LAUNCH);
@@ -34,6 +49,7 @@ public class MasterConsole {
         commandList.add(Global.CMD_STATUS);
         commandList.add(Global.CMD_HELP);
 
+        // init command map
         commandMap.put(Global.CMD_LOAD, "configFile");
         commandMap.put(Global.CMD_DEPLOY, "project [package]");
         commandMap.put(Global.CMD_LAUNCH, "project [package]");
@@ -44,9 +60,23 @@ public class MasterConsole {
         commandMap.put(Global.CMD_HELP, "");
     }
 
+    /**
+     * Command options.
+     * 
+     * @author jiaozhihui@corp.netease.com
+     */
     class MasterCommandOptions {
+        /**
+         * Action name of the command.
+         */
         private String action;
+        /**
+         * Project name.
+         */
         private String project;
+        /**
+         * List of package name.
+         */
         private List<String> packages;
 
         public String getAction() {
@@ -61,6 +91,13 @@ public class MasterConsole {
             return packages;
         }
 
+        /**
+         * Parse the command string.
+         * 
+         * @param cmdString
+         *            command string
+         * @return true for successfully parse, false otherwise
+         */
         public boolean parseCommand(String cmdString) {
             String[] args = cmdString.split(" ");
             if (args.length < 2) {
@@ -97,6 +134,9 @@ public class MasterConsole {
         }
     }
 
+    /**
+     * Start the console.
+     */
     public void start() {
         Completor commandCompletor = new SimpleCompletor(new String[] { Global.CMD_LOAD, Global.CMD_DEPLOY,
                 Global.CMD_LAUNCH, Global.CMD_UPDATE, Global.CMD_RESTART, Global.CMD_STOP, Global.CMD_STATUS,
@@ -128,6 +168,7 @@ public class MasterConsole {
                             continue;
                         }
 
+                        // do the action according the command
                         master.doAction(commandOptions.getAction(), commandOptions.getProject(), commandOptions
                                 .getPackages());
                     } catch (RuntimeException e) {
@@ -140,10 +181,22 @@ public class MasterConsole {
         }
     }
 
+    /**
+     * Add project name to the command candidate list.
+     * 
+     * @param projectName
+     *            project name
+     */
     public void addProject(String projectName) {
         projectNameCompletor.addCandidateString(projectName);
     }
 
+    /**
+     * Add package names to the command candidate list.
+     * 
+     * @param packageList
+     *            list of package names
+     */
     public void addPackage(List<String> packageList) {
         for (String pkg : packageList) {
             packageNameCompletor.addCandidateString(pkg);

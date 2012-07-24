@@ -44,6 +44,11 @@ public class RootProcess extends AbstractProcess {
         init(this, null);
     }
 
+    /**
+     * Clear action status.
+     * 
+     * @param packageName
+     */
     public void clearAction(String packageName) {
         int i = 0;
         List<String> topoOrderPackageList = projectMeta.getTopoOrderPackageList();
@@ -65,10 +70,25 @@ public class RootProcess extends AbstractProcess {
         }
     }
 
+    /**
+     * Get the target process by package name.
+     * 
+     * @param packageName
+     *            the package name
+     * @return the process
+     */
     public AbstractProcess getProcessByName(String packageName) {
         return processNameMap.get(packageName);
     }
 
+    /**
+     * Before doing the action, mark the status.
+     * 
+     * @param action
+     *            the action object
+     * @param packages
+     *            the target packages
+     */
     public void doSupervisedAction(Action action, List<String> packages) {
         if (packages.size() == 0) {
             clearAction(Global.ROOT_PACKAGE_NAME);

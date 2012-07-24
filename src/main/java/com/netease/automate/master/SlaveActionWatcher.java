@@ -31,6 +31,7 @@ public class SlaveActionWatcher implements Watcher {
     public void process(WatchedEvent event) {
         if (event.getType() == EventType.NodeChildrenChanged) {
             if (task.checkTask()) {
+                // child node changed and there is task waiting for the response from slave
                 sep.release();
                 return;
             }

@@ -49,10 +49,19 @@ public class AutoSlave {
 
     private ProcessHolder processHolder;
 
+    /**
+     * Constructor with the address of zookeeper.
+     * 
+     * @param zkAddress
+     *            address of ZooKeeper
+     */
     public AutoSlave(String zkAddress) {
         this.zkAddress = zkAddress;
     }
 
+    /**
+     * Start the slave.
+     */
     public void startSlave() {
         String slaveHome = System.getProperty(SLAVE_HOME_ENV);
         String binPath = Utils.constructString(slaveHome, File.separator, DEFAULT_LAUNCH_DIR);
@@ -140,10 +149,27 @@ public class AutoSlave {
         }
     }
 
+    /**
+     * Get the zookeeper instance that bind to this slave.
+     * 
+     * @return the zookeeper instance
+     */
     public ZooKeeper getZooKeeper() {
         return zk;
     }
 
+    /**
+     * Add specific process info to zookeeper.
+     * 
+     * @param pid
+     *            pid of the process
+     * @param projectName
+     *            project name of the project name
+     * @param pkgName
+     *            package name of the target process
+     * @param launchScript
+     *            the launch cmd(or script) of the target process
+     */
     public void addTargetPid(String pid, String projectName, String pkgName, String launchScript) {
         ProcessMeta processMeta = new ProcessMeta(projectName, pkgName, launchScript);
 
@@ -170,6 +196,16 @@ public class AutoSlave {
         }
     }
 
+    /**
+     * Delete process info from zookeeper
+     * 
+     * @param pid
+     *            pid of the process
+     * @param projectName
+     *            project name of the project name
+     * @param pkgName
+     *            package name of the target process
+     */
     public void deleteTargetPid(String pid, String projectName, String pkgName) {
         String pkgRuntimePath = Utils.constructString(Utils.getProjectRuntimeRootPath(projectName),
                 Global.PATH_SEPARATOR, pkgName, Global.PATH_SEPARATOR, localAddr);
@@ -192,12 +228,29 @@ public class AutoSlave {
         }
     }
 
+    /**
+     * Process the message send by the master node.
+     * 
+     * @param message
+     *            the message
+     */
     public void processMessage(byte[] message) {
         MessageMeta meta = JsonUtils.getObject(message, MessageMeta.class);
 
         processMasterCmd(meta.getAction(), meta.getProject(), meta.getData());
     }
 
+    /**
+     * Process the action send by the master node. Action and other info are extracted from the
+     * message.
+     * 
+     * @param action
+     *            action name
+     * @param projectName
+     *            project name
+     * @param data
+     *            data that related to this action
+     */
     public void processMasterCmd(String action, String projectName, byte[] data) {
         PackageMeta pkgMeta = JsonUtils.getObject(data, PackageMeta.class);
         logger.info("recv master cmd: " + projectName + " -> " + action + "@" + pkgMeta.getPkgName());
@@ -229,6 +282,18 @@ public class AutoSlave {
         }
     }
 
+    /**
+     * Restart target processes which belongs to target package.
+     * 
+     * @param projectName
+     *            project name that target package belongs to
+     * @param pkgMeta
+     *            package meta definitions
+     * @throws KeeperException
+     *             throws when write project meta to zookeeper
+     * @throws InterruptedException
+     *             if the zookeeper server transaction is interrupted
+     */
     private void restartProcess(String projectName, PackageMeta pkgMeta) throws InterruptedException, KeeperException {
         String projectBasePath = Utils.getProjectRootPath(projectName);
 
@@ -249,6 +314,20 @@ public class AutoSlave {
         logger.info("restart [DONE]");
     }
 
+    /**
+     * Stop target processes which belongs to target package.
+     * 
+     * @param projectName
+     *            project name that target package belongs to
+     * @param pkgMeta
+     *            package meta definitions
+     * @throws KeeperException
+     *             throws when write project meta to zookeeper
+     * @throws InterruptedException
+     *             if the zookeeper server transaction is interrupted
+     * @throws ProcessNotLaunchedException
+     *             throws when target process hasn't been launched
+     */
     private void stopProcess(String projectName, PackageMeta pkgMeta) throws InterruptedException, KeeperException,
             ProcessNotLaunchedException {
         String projectBasePath = Utils.getProjectRootPath(projectName);
@@ -273,6 +352,18 @@ public class AutoSlave {
         logger.info("stop [DONE]");
     }
 
+    /**
+     * Deploy target package.
+     * 
+     * @param projectName
+     *            project name which target package belongs to
+     * @param pkgMeta
+     *            package meta definitions
+     * @throws KeeperException
+     *             throws when write project meta to zookeeper
+     * @throws InterruptedException
+     *             if the zookeeper server transaction is interrupted
+     */
     private void deployPackage(String projectName, PackageMeta pkgMeta) throws KeeperException, InterruptedException {
         String projectBasePath = Utils.getProjectRootPath(projectName);
 
@@ -336,6 +427,20 @@ public class AutoSlave {
         logger.info("deploy [DONE]");
     }
 
+    /**
+     * Launch the target process.
+     * 
+     * @param projectName
+     *            project name which target process belongs to
+     * @param pkgMeta
+     *            package meta definitions for target process
+     * @throws KeeperException
+     *             throws when write project meta to zookeeper
+     * @throws InterruptedException
+     *             if the zookeeper server transaction is interrupted
+     * @throws ProcessLaunchedException
+     *             throws when target process has been launched
+     */
     private void launchProcess(String projectName, PackageMeta pkgMeta) throws KeeperException, InterruptedException,
             ProcessLaunchedException {
         String projectBasePath = Utils.getProjectRootPath(projectName);

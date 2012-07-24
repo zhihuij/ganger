@@ -17,7 +17,7 @@ import com.netease.automate.meta.Global;
 import com.netease.automate.utils.Utils;
 
 /**
- * Process holder for slave managed process.
+ * Process holder for slave managed processes.
  * 
  * @author jiaozhihui@corp.netease.com
  */

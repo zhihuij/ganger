@@ -41,6 +41,7 @@ public class EventWatcher implements Watcher {
             }
 
             if (event.getType() != EventType.NodeDeleted) {
+                // reregister the watcher when node wasn't deleted
                 zk.getData(event.getPath(), true, null);
             }
         } catch (KeeperException e) {

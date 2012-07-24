@@ -33,10 +33,12 @@ public abstract class AbstractProcess implements Entity {
 
     public void doAction(Action action) throws AutomateException {
         if (this instanceof RuntimeProcess) {
+            // runtime process, just do the action
             doSelfAction(action);
 
             actionStatus = ActionStatus.DONE;
         } else {
+            // package supervisor
             if (actionStatus == ActionStatus.DONE) {
                 LogUtils.logInfoLine("action has been done for: " + processName);
                 // action has been done
@@ -50,8 +52,10 @@ public abstract class AbstractProcess implements Entity {
 
             for (AbstractProcess process : subProcesses) {
                 if (process instanceof PackageSupervisor) {
+                    // get the sub-package supervisor of this package supervisor
                     pkgSupList.add((PackageSupervisor) process);
                 } else {
+                    // get the sub-runtime process of this package supervisor
                     runtimeProcessList.add((RuntimeProcess) process);
                 }
             }
@@ -73,11 +77,12 @@ public abstract class AbstractProcess implements Entity {
                 }
 
                 doSelfAction(action);
-
+                // do the action for runtime process
                 for (RuntimeProcess p : runtimeProcessList) {
                     p.doAction(action);
                 }
 
+                // set the status flag
                 actionStatus = ActionStatus.DONE;
             }
 
@@ -130,9 +135,30 @@ public abstract class AbstractProcess implements Entity {
         this.actionStatus = actionStatus;
     }
 
+    /**
+     * Process event.
+     * 
+     * @param event
+     *            the event object
+     * @param targetProcess
+     *            the target process
+     */
     public abstract void processEvent(EventType event, AbstractProcess targetProcess);
 
+    /**
+     * Get the target address.
+     * 
+     * @return the target address
+     */
     public abstract String getTarget();
 
+    /**
+     * Do the action
+     * 
+     * @param action
+     *            the action object
+     * @throws AutomateException
+     *             if there are error
+     */
     protected abstract void doSelfAction(Action action) throws AutomateException;
 }
