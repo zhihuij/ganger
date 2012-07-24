@@ -1,9 +1,6 @@
 Ganger - A simple automate tool.
 ===============
 
-What is Ganger
---------------
-
 Ganger is a simple automate tool. It can automate deploy packages, launch
 target processes, update packages deployment(kill the old process and launch
 the new one), restart target processes and monitor the status of target 
