@@ -44,6 +44,15 @@ for master node, auto-slave-x.x.x.tar.gz for slave node.
 Before doing the actual work, you need to setup a [ZooKeeper](http://zookeeper.apache.org/) 
 instance, and use the address to start master and slave nodes.
 
+Start ganger in three steps: 1) start the ZooKeeper instance; 2) start the slave
+nodes by using `bin/auto-slave.sh`; 3) start the master node by using `bin/ganger.sh`.
+
+Use ganger as following:
+
+    load ../sample/xmpp.properties  # load a project configuration file
+	deploy xmpp  # deploy the packages defined by this project 
+	launch xmpp  # and lauch them
+
 See [here](https://github.com/onlychoice/ganger/blob/master/sample/xmpp.properties) 
 for a sample configuration format for a project.
 
