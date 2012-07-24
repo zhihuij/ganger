@@ -12,21 +12,21 @@ on many target machines simultaneously.
 Features
 --------
 
-Automatation: help you do some automate tasks, for example: deploy packages,
+**Automatation**: help you do some automate tasks, for example: deploy packages,
 start processes, stop processes and update deployments etc.
 (Note: deploy action *ONLY* support compressed binary executables(.tar.gz)
 currently.)
 
-Lifecycle management: you can start, stop, restart or update the target
+**Lifecycle management**: you can start, stop, restart or update the target
 process.
 
-Dependence management: we organize the package as a directed graph with no
+**Dependence management**: we organize the package as a directed graph with no
 cycles, when a process of a package crashed or started, the processes of the 
 package which depend on it will be notified. Automate action will operate on 
 packages as the topological order of the dependence graph(or reverse order for 
-actions similar to #stop#).
+actions similar to `stop`).
 
-Status monitor: monitor the target process's status.
+**Status monitor**: monitor the target process's status.
 
 Getting Started
 ---------------
@@ -49,4 +49,4 @@ for a sample configuration format for a project.
 
 Document
 --------
-see user manual [here](https://github.com/onlychoice/ganger/tree/master/doc)
+See user manual [here](https://github.com/onlychoice/ganger/tree/master/doc)
