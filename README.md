@@ -34,8 +34,10 @@ Clone this repo
 
     git clone git://github.com/onlychoice/ganger.git
 
-and run ant release, this will create two files in directory target/release: 
-auto-master-x.x.x.tar.gz for master node, auto-slave-x.x.x.tar.gz for slave node.
+and run 
+    ant release
+this will create two files in directory target/release: auto-master-x.x.x.tar.gz
+for master node, auto-slave-x.x.x.tar.gz for slave node.
 
 Before doing the actual work, you need to setup a [ZooKeeper](http://zookeeper.apache.org/) 
 instance, and use the address to start master and slave nodes.
