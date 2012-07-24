@@ -1,4 +1,4 @@
-Ganger - A simple automate tool.
+Ganger - A simple automate tool
 ===============
 
 Ganger is a simple automate tool. It can automate deploy packages, launch
