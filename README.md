@@ -9,6 +9,11 @@ process.
 It saves your time for development, and make it easier to deploy your systems
 on many target machines simultaneously.
 
+ * Homepage: <http://github.com/netease/ganger>
+ * Wiki: <https://github.com/netease/ganger/wiki/>
+ * Issues: <https://github.com/netease/ganger/issues/>
+ * Tags: java, automatation
+
 Features
 --------
 
@@ -32,7 +37,7 @@ Getting Started
 ---------------
 Clone this repo
 
-    git clone git://github.com/onlychoice/ganger.git
+    git clone git://github.com/netease/ganger.git
 
 and run 
 
@@ -53,9 +58,9 @@ Use ganger as following:
 	deploy xmpp  # deploy the packages defined by this project 
 	launch xmpp  # and lauch them
 
-See [here](https://github.com/onlychoice/ganger/blob/master/sample/xmpp.properties) 
+See [here](https://github.com/netease/ganger/blob/master/sample/xmpp.properties) 
 for a sample configuration format for a project.
 
 Document
 --------
-See user manual [here](https://github.com/onlychoice/ganger/tree/master/doc)
+See user manual [here](https://github.com/netease/ganger/tree/master/doc)
